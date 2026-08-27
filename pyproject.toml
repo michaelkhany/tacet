@@ -1,0 +1,93 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tacet"
+version = "0.1.0"
+description = "Observability-aware anomaly detection for HPC and distributed systems: score the silence, not just the signal."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Michael B.Kh.", email = "michaelkhany@gmail.com" }]
+keywords = [
+    "anomaly-detection",
+    "observability",
+    "hpc",
+    "monitoring",
+    "telemetry",
+    "missing-data",
+    "missingness",
+    "predictive-maintenance",
+    "distributed-systems",
+    "gpu",
+    "silent-failure",
+    "time-series",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Distributed Computing",
+    "Typing :: Typed",
+]
+dependencies = [
+    "numpy>=1.23",
+    "pandas>=1.5",
+]
+
+[project.optional-dependencies]
+viz = ["matplotlib>=3.6"]
+prometheus = ["requests>=2.28"]
+stats = ["scikit-learn>=1.1", "scipy>=1.9"]
+all = ["matplotlib>=3.6", "requests>=2.28", "scikit-learn>=1.1", "scipy>=1.9", "tabulate>=0.9"]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.6",
+    "matplotlib>=3.6",
+    "scikit-learn>=1.1",
+    "scipy>=1.9",
+    "tabulate>=0.9",
+    "requests>=2.28",
+]
+
+[project.urls]
+Homepage = "https://github.com/michaelkhany/tacet"
+Documentation = "https://github.com/michaelkhany/tacet#readme"
+Source = "https://github.com/michaelkhany/tacet"
+Issues = "https://github.com/michaelkhany/tacet/issues"
+Changelog = "https://github.com/michaelkhany/tacet/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tacet"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/tests", "/examples", "/README.md", "/LICENSE", "/CHANGELOG.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+filterwarnings = ["error::FutureWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B018"]
