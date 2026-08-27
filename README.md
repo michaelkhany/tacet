@@ -209,6 +209,7 @@ tacet.lead_lag(windows, target="eii_total", max_lag=24)   # what moves first
 Six estimators — Pearson, Spearman, Kendall, partial, mutual information,
 distance correlation — each reporting the supporting sample size, so a
 correlation of 0.98 backed by nine points cannot quietly become a finding.
+All but Kendall run on the core install; Kendall needs `tacet[stats]`.
 
 ### Missingness analysis
 

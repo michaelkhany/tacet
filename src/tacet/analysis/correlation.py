@@ -168,6 +168,8 @@ def correlation_map(
     support = _pairwise_support(numeric)
 
     if method in ("pearson", "spearman", "kendall"):
+        if method == "kendall":
+            _require_scipy("kendall")
         matrix = numeric.corr(method=method, min_periods=min_periods)
     elif method == "partial":
         matrix = _partial_correlation(numeric)
@@ -206,6 +208,35 @@ def _pairwise_support(frame: pd.DataFrame) -> pd.DataFrame:
     present = frame.notna().astype(np.int32).to_numpy()
     counts = present.T @ present
     return pd.DataFrame(counts, index=frame.columns, columns=frame.columns)
+
+
+def _require_scipy(what: str) -> None:
+    """Fail with an install hint rather than a bare ModuleNotFoundError."""
+    try:
+        import scipy  # noqa: F401
+    except ImportError as exc:
+        raise ImportError(
+            f"the {what!r} correlation method needs SciPy. "
+            'Install it with: pip install "tacet[stats]"'
+        ) from exc
+
+
+def _series_corr(a: pd.Series, b: pd.Series, method: str) -> float:
+    """Pairwise correlation that does not drag SciPy into the default path.
+
+    ``Series.corr`` routes "spearman" and "kendall" through ``scipy.stats``,
+    unlike ``DataFrame.corr``, which ranks in Cython. Spearman is this module's
+    default, so a numpy+pandas install would otherwise fail on the documented
+    path. Spearman is Pearson on ranks, so compute it that way.
+    """
+    # A constant input has zero standard deviation; numpy warns on the divide
+    # before returning the NaN the callers already test for.
+    with np.errstate(divide="ignore", invalid="ignore"):
+        if method == "spearman":
+            return a.rank().corr(b.rank())
+        if method == "kendall":
+            _require_scipy("kendall")
+        return a.corr(b, method=method)
 
 
 def _partial_correlation(frame: pd.DataFrame) -> pd.DataFrame:
@@ -399,7 +430,7 @@ def lead_lag(
             if len(pair) < min_periods:
                 continue
 
-            value = pair.iloc[:, 0].corr(pair.iloc[:, 1], method=method)
+            value = _series_corr(pair.iloc[:, 0], pair.iloc[:, 1], method)
             if np.isfinite(value) and (
                 not np.isfinite(best_value) or abs(value) > abs(best_value)
             ):

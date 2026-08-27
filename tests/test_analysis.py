@@ -26,6 +26,11 @@ def coupled():
 
 @pytest.mark.parametrize("method", METHODS)
 def test_every_method_runs(method, coupled):
+    if method == "kendall":
+        # The only estimator that genuinely needs the [stats] extra; the rest
+        # must work on a numpy+pandas install, which is what this asserts.
+        pytest.importorskip("scipy")
+
     mapping = correlation_map(coupled, method=method, min_periods=20)
 
     assert mapping.matrix.shape[0] == mapping.matrix.shape[1]

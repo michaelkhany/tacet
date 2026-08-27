@@ -145,8 +145,30 @@ def _ranking(frame: pd.DataFrame, truth: np.ndarray) -> dict:
     except ImportError:
         return {
             "roc_auc": _roc_auc(truth, scores),
-            "average_precision": float("nan"),
+            "average_precision": _average_precision(truth, scores),
         }
+
+
+def _average_precision(truth: np.ndarray, scores: np.ndarray) -> float:
+    """Average precision without sklearn: the sum of (delta recall x precision).
+
+    Returning NaN when sklearn is absent would be the one thing this library
+    exists to argue against -- a number that quietly goes missing while the run
+    still reports success.
+    """
+    order = np.argsort(-scores, kind="mergesort")
+    labels = truth[order] == 1
+    ordered = scores[order]
+
+    # One cut per distinct score, so tied scores are resolved as a group rather
+    # than in whatever order the sort happened to leave them.
+    cuts = np.r_[np.where(np.diff(ordered))[0], len(labels) - 1]
+
+    hits = np.cumsum(labels)[cuts]
+    precision = hits / (cuts + 1.0)
+    recall = hits / hits[-1]
+
+    return float(np.sum(np.diff(np.r_[0.0, recall]) * precision))
 
 
 def _roc_auc(truth: np.ndarray, scores: np.ndarray) -> float:
